@@ -83,32 +83,13 @@ namespace autoknyilvan
         private void ujautobutton_Click(object sender, EventArgs e)
         {
 
-            //-- Szükséges adatok ellenőrzése
-            if (string.IsNullOrEmpty(RendszamText.Text))
+            if (nincsenek_adatok())
             {
 
-                MessageBox.Show("Adjon meg rendszámot!" ,"Hiányzó adat!", MessageBoxButtons.OK , MessageBoxIcon.Warning);
-                RendszamText.Focus();
                 return;
 
             }
-            if (EvjaratNum.Value > DateTime.Now.Year)
-            {
 
-                MessageBox.Show("Érvénytelen évjárat!" , "Érvénytelen adat!" , MessageBoxButtons.OK , MessageBoxIcon.Warning);
-                EvjaratNum.Value = DateTime.Now.Year;
-                EvjaratNum.Focus();
-                return;
-
-            }
-            if (string.IsNullOrEmpty(SzinText.Text))
-            {
-
-                MessageBox.Show("Adjon meg egy színt!", "Hiányzó adat!", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                SzinText.Focus();
-                return;
-
-            }
             //-- Kiírjuk az adatbázisba -------
             command.CommandText = "INSERT INTO `autók` (`id`, `rendszám`, `üzembehelyezve`, `szín`) VALUES (NULL, @rendszam, @ev, @szin)";
             command.Parameters.Clear();
@@ -146,6 +127,145 @@ namespace autoknyilvan
             connection.Close();
             Autok_lista_update();
             
+
+        }
+
+        private bool nincsenek_adatok()
+        {
+
+            //-- Szükséges adatok ellenőrzése
+            if (string.IsNullOrEmpty(RendszamText.Text))
+            {
+
+                MessageBox.Show("Adjon meg rendszámot!", "Hiányzó adat!", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                RendszamText.Focus();
+                return true;
+
+            }
+            if (EvjaratNum.Value > DateTime.Now.Year)
+            {
+
+                MessageBox.Show("Érvénytelen évjárat!", "Érvénytelen adat!", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                EvjaratNum.Value = DateTime.Now.Year;
+                EvjaratNum.Focus();
+                return true;
+
+            }
+            if (string.IsNullOrEmpty(SzinText.Text))
+            {
+
+                MessageBox.Show("Adjon meg egy színt!", "Hiányzó adat!", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                SzinText.Focus();
+                return true;
+
+            }
+            return false;
+
+        }
+
+        private void Autok_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+            
+            if (Autok.SelectedIndex < 0)
+            {
+
+                return;
+
+            }
+            //-- A felhasználó kijelöl egy elemet a listában.
+            AutoAdat kivalasztottauto = (AutoAdat)Autok.SelectedItem;
+            IdText.Text = kivalasztottauto.Id.ToString();
+            RendszamText.Text = kivalasztottauto.Rendszam;
+            SzinText.Text = kivalasztottauto.Szin;
+            EvjaratNum.Value = kivalasztottauto.Evjarat;
+
+        }
+
+        private void Modositbutton_Click(object sender, EventArgs e)
+        {
+
+            if (Autok.SelectedIndex < 0)
+            {
+
+                MessageBox.Show("Nincs kijelölve autó!","Hiányzó jelölés!", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+
+            }
+            AutoAdat kivalasztottauto = (AutoAdat)Autok.SelectedItem;
+            command.CommandText = "UPDATE `autók` SET `rendszám` = @rendszam, `üzembehelyezve` = @evjarat, `szín`= @szin WHERE `id` = @id";
+            command.Parameters.Clear();
+            command.Parameters.AddWithValue("@id", IdText.Text);
+            command.Parameters.AddWithValue("@rendszam", RendszamText.Text);
+            command.Parameters.AddWithValue("@evjarat", EvjaratNum.Value);
+            command.Parameters.AddWithValue("@szin", SzinText.Text);
+            connection.Open();
+            if (command.ExecuteNonQuery() == 1)
+            {
+
+                MessageBox.Show("Módosítás sikeres volt!", "Sikeres!", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                connection.Close();
+                IdText.Text = "";
+                RendszamText.Text = "";
+                SzinText.Text = "";
+                EvjaratNum.Value = EvjaratNum.Minimum;
+                Autok_lista_update();
+
+            }
+            else
+            {
+
+                MessageBox.Show("Az adatok módosítása sikertelen volt!", "Sikertelen!", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+
+            }
+            if (connection.State == ConnectionState.Open)
+            {
+
+                connection.Close();
+
+            }
+            
+
+        }
+
+        private void Torolbutton_Click(object sender, EventArgs e)
+        {
+
+            if (Autok.SelectedIndex < 0)
+            {
+
+                return;
+
+            }
+            command.CommandText = "DELETE FROM `autók` WHERE `id` = @id;";
+            command.Parameters.Clear();
+            command.Parameters.AddWithValue("@id", IdText.Text);
+            connection.Open();
+            if (command.ExecuteNonQuery() == 1)
+            {
+
+                MessageBox.Show("Törlés sikeres volt!", "Sikeres!", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                connection.Close();
+                IdText.Text = "";
+                RendszamText.Text = "";
+                SzinText.Text = "";
+                EvjaratNum.Value = EvjaratNum.Minimum;
+                Autok_lista_update();
+
+            }
+            else
+            {
+
+                MessageBox.Show("Az adatok törlése sikertelen volt!", "Sikertelen!", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+
+            }
+            if (connection.State == ConnectionState.Open)
+            {
+
+                connection.Close();
+
+            }
+
 
         }
     }
